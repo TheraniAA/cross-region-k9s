@@ -1,0 +1,227 @@
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: ebs-sc2
+provisioner: ebs.csi.aws.com
+volumeBindingMode: WaitForFirstConsumer
+parameters:
+  type: gp3
+  encrypted: "true"
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: zookeeper-sfo-0
+  namespace: default
+spec:
+  serviceName: zookeeper-sfo
+  replicas: 1
+  selector:
+    matchLabels:
+      app: zookeeper
+  template:
+    metadata:
+      labels:
+        app: zookeeper
+    spec:
+      securityContext:
+        fsGroup: 1001
+        runAsUser: 1001
+      initContainers:
+      - name: init-myid
+        image: busybox
+        command: ['sh', '-c', 'echo 1 > /data/data/myid']
+        volumeMounts:
+        - name: data
+          mountPath: /data
+      containers:
+      - name: zookeeper
+        image: bitnami/zookeeper:3.7.1
+        ports:
+        - containerPort: 2181
+        - containerPort: 2888
+        - containerPort: 3888
+        env:
+        - name: ALLOW_ANONYMOUS_LOGIN
+          value: "yes"
+        - name: ZOO_SERVER_ID
+          value: "1"
+        - name: ZOO_SERVERS
+          value: "zookeeper-sfo-0-0.zookeeper-sfo.default.svc.cluster.local:2888:3888;zookeeper-sfo-1-0.zookeeper-sfo.default.svc.cluster.local:2888:3888;zookeeper-sfo-2-0.zookeeper-sfo.default.svc.cluster.local:2888:3888;zookeeper-ord-0-0.zookeeper-ord.default.svc.cluster.local:2888:3888:observer;zookeeper-ord-1-0.zookeeper-ord.default.svc.cluster.local:2888:3888:observer;zookeeper-ord-2-0.zookeeper-ord.default.svc.cluster.local:2888:3888:observer"
+        - name: ZOO_TICK_TIME
+          value: "2000"
+        - name: ZOO_INIT_LIMIT
+          value: "10"
+        - name: ZOO_SYNC_LIMIT
+          value: "5"
+        - name: ZOO_MAX_CLIENT_CNXNS
+          value: "60"
+        - name: ZOO_AUTOPURGE_PURGE_INTERVAL
+          value: "1"
+        - name: ZOO_STANDALONE_ENABLED
+          value: "false"
+        - name: ZOO_ADMIN_SERVER_ENABLED
+          value: "false"
+        volumeMounts:
+        - name: data
+          mountPath: /bitnami/zookeeper
+  volumeClaimTemplates:
+  - metadata:
+      name: data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      storageClassName: ebs-sc2
+      resources:
+        requests:
+          storage: 5Gi
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: zookeeper-sfo-1
+  namespace: default
+spec:
+  serviceName: zookeeper-sfo
+  replicas: 1
+  selector:
+    matchLabels:
+      app: zookeeper
+  template:
+    metadata:
+      labels:
+        app: zookeeper
+    spec:
+      securityContext:
+        fsGroup: 1001
+        runAsUser: 1001
+      initContainers:
+      - name: init-myid
+        image: busybox
+        command: ['sh', '-c', 'echo 2 > /data/data/myid']
+        volumeMounts:
+        - name: data
+          mountPath: /data
+      containers:
+      - name: zookeeper
+        image: bitnami/zookeeper:3.7.1
+        ports:
+        - containerPort: 2181
+        - containerPort: 2888
+        - containerPort: 3888
+        env:
+        - name: ALLOW_ANONYMOUS_LOGIN
+          value: "yes"
+        - name: ZOO_SERVER_ID
+          value: "2"
+        - name: ZOO_SERVERS
+          value: "zookeeper-sfo-0-0.zookeeper-sfo.default.svc.cluster.local:2888:3888;zookeeper-sfo-1-0.zookeeper-sfo.default.svc.cluster.local:2888:3888;zookeeper-sfo-2-0.zookeeper-sfo.default.svc.cluster.local:2888:3888;zookeeper-ord-0-0.zookeeper-ord.default.svc.cluster.local:2888:3888:observer;zookeeper-ord-1-0.zookeeper-ord.default.svc.cluster.local:2888:3888:observer;zookeeper-ord-2-0.zookeeper-ord.default.svc.cluster.local:2888:3888:observer"
+        - name: ZOO_TICK_TIME
+          value: "2000"
+        - name: ZOO_INIT_LIMIT
+          value: "10"
+        - name: ZOO_SYNC_LIMIT
+          value: "5"
+        - name: ZOO_MAX_CLIENT_CNXNS
+          value: "60"
+        - name: ZOO_AUTOPURGE_PURGE_INTERVAL
+          value: "1"
+        - name: ZOO_STANDALONE_ENABLED
+          value: "false"
+        - name: ZOO_ADMIN_SERVER_ENABLED
+          value: "false"
+        volumeMounts:
+        - name: data
+          mountPath: /bitnami/zookeeper
+  volumeClaimTemplates:
+  - metadata:
+      name: data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      storageClassName: ebs-sc2
+      resources:
+        requests:
+          storage: 5Gi
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: zookeeper-sfo-2
+  namespace: default
+spec:
+  serviceName: zookeeper-sfo
+  replicas: 1
+  selector:
+    matchLabels:
+      app: zookeeper
+  template:
+    metadata:
+      labels:
+        app: zookeeper
+    spec:
+      securityContext:
+        fsGroup: 1001
+        runAsUser: 1001
+      initContainers:
+      - name: init-myid
+        image: busybox
+        command: ['sh', '-c', 'echo 3 > /data/data/myid']
+        volumeMounts:
+        - name: data
+          mountPath: /data
+      containers:
+      - name: zookeeper
+        image: bitnami/zookeeper:3.7.1
+        ports:
+        - containerPort: 2181
+        - containerPort: 2888
+        - containerPort: 3888
+        env:
+        - name: ALLOW_ANONYMOUS_LOGIN
+          value: "yes"
+        - name: ZOO_SERVER_ID
+          value: "3"
+        - name: ZOO_SERVERS
+          value: "zookeeper-sfo-0-0.zookeeper-sfo.default.svc.cluster.local:2888:3888;zookeeper-sfo-1-0.zookeeper-sfo.default.svc.cluster.local:2888:3888;zookeeper-sfo-2-0.zookeeper-sfo.default.svc.cluster.local:2888:3888;zookeeper-ord-0-0.zookeeper-ord.default.svc.cluster.local:2888:3888:observer;zookeeper-ord-1-0.zookeeper-ord.default.svc.cluster.local:2888:3888:observer;zookeeper-ord-2-0.zookeeper-ord.default.svc.cluster.local:2888:3888:observer"
+        - name: ZOO_TICK_TIME
+          value: "2000"
+        - name: ZOO_INIT_LIMIT
+          value: "10"
+        - name: ZOO_SYNC_LIMIT
+          value: "5"
+        - name: ZOO_MAX_CLIENT_CNXNS
+          value: "60"
+        - name: ZOO_AUTOPURGE_PURGE_INTERVAL
+          value: "1"
+        - name: ZOO_STANDALONE_ENABLED
+          value: "false"
+        - name: ZOO_ADMIN_SERVER_ENABLED
+          value: "false"
+        volumeMounts:
+        - name: data
+          mountPath: /bitnami/zookeeper
+  volumeClaimTemplates:
+  - metadata:
+      name: data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      storageClassName: ebs-sc2
+      resources:
+        requests:
+          storage: 5Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: zookeeper-sfo
+  namespace: default
+spec:
+  clusterIP: None
+  ports:
+    - port: 2181
+      name: client
+    - port: 2888
+      name: server
+    - port: 3888
+      name: leader-election
+  selector:
+    app: zookeeper

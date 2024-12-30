@@ -1,0 +1,191 @@
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: ebs-sc
+provisioner: ebs.csi.aws.com
+volumeBindingMode: WaitForFirstConsumer
+parameters:
+  type: gp3
+  encrypted: "true"
+---
+apiVersion: "clickhouse.altinity.com/v1"
+kind: "ClickHouseInstallation"
+metadata:
+  name: "ord"
+spec:
+  configuration:
+    settings:
+      listen_host: 0.0.0.0
+      distributed_ddl/path: /clickhouse/task_queue/ddl
+    users:
+      default/networks/ip: '0.0.0.0'
+      default/access_management: 1
+      default/profile: default
+      default/quota: default
+    clusters:
+      - name: "cl"
+        layout:
+          replicasCount: 3
+          shardsCount: 1
+        templates:
+          podTemplate: replica
+          volumeClaimTemplate: storage
+    zookeeper:
+        nodes:
+        - host: zookeeper-ord-0-0.zookeeper-ord.default.svc.cluster.local
+          port: 2181
+        - host: zookeeper-ord-1-0.zookeeper-ord.default.svc.cluster.local
+          port: 2181
+        - host: zookeeper-ord-2-0.zookeeper-ord.default.svc.cluster.local
+          port: 2181
+    files:
+      users.xml: |
+        <yandex>
+          <users>
+            <default>
+              <access_management>1</access_management>
+              <profile>default</profile>
+              <networks>
+                <ip>::/0</ip>
+              </networks>
+              <quota>default</quota>
+              <grants>
+                <grant>SHOW ON *.*</grant>
+                <grant>SELECT ON *.*</grant>
+                <grant>INSERT ON *.*</grant>
+                <grant>ALTER ON *.*</grant>
+                <grant>CREATE ON *.*</grant>
+                <grant>DROP ON *.*</grant>
+                <grant>UNDROP TABLE ON *.*</grant>
+                <grant>TRUNCATE ON *.*</grant>
+                <grant>OPTIMIZE ON *.*</grant>
+                <grant>BACKUP ON *.*</grant>
+                <grant>KILL QUERY ON *.*</grant>
+                <grant>KILL TRANSACTION ON *.*</grant>
+                <grant>MOVE PARTITION BETWEEN SHARDS ON *.*</grant>
+                <grant>ACCESS MANAGEMENT ON *.*</grant>
+                <grant>NAMED COLLECTION ADMIN ON *.*</grant>
+                <grant>SYSTEM ON *.*</grant>
+                <grant>dictGet ON *.*</grant>
+                <grant>displaySecretsInShowAndSelect ON *.*</grant>
+                <grant>INTROSPECTION ON *.*</grant>
+                <grant>SOURCES ON *.*</grant>
+                <grant>WITH GRANT OPTION</grant>
+              </grants>
+            </default>
+          </users>
+        </yandex>
+      remote_servers.xml: |
+          <yandex>
+            <remote_servers>
+              <umbrella_cluster>
+                <shard>
+                  <internal_replication>true</internal_replication>
+                  <replica>
+                    <host>chi-ord-cl-0-0-0.chi-ord-cl-0-0.default.svc.cluster.local</host>
+                    <port>9000</port>
+                    <user>test</user>
+                    <password>test123</password>
+                  </replica>
+                  <replica>
+                    <host>chi-ord-cl-0-1-0.chi-ord-cl-0-1.default.svc.cluster.local</host>
+                    <port>9000</port>
+                    <user>test</user>
+                    <password>test123</password>
+                  </replica>
+                  <replica>
+                    <host>chi-ord-cl-0-2-0.chi-ord-cl-0-2.default.svc.cluster.local</host>
+                    <port>9000</port>
+                    <user>test</user>
+                    <password>test123</password>
+                  </replica>
+                  <replica>
+                    <host>chi-sfo-cl-0-0-0.chi-sfo-cl-0-0.default.svc.cluster.local</host>
+                    <port>9000</port>
+                    <user>test</user>
+                    <password>test123</password>
+                  </replica>
+                  <replica>
+                    <host>chi-sfo-cl-0-1-0.chi-sfo-cl-0-1.default.svc.cluster.local</host>
+                    <port>9000</port>
+                    <user>test</user>
+                    <password>test123</password>
+                  </replica>
+                  <replica>
+                    <host>chi-sfo-cl-0-2-0.chi-sfo-cl-0-2.default.svc.cluster.local</host>
+                    <port>9000</port>
+                    <user>test</user>
+                    <password>test123</password>
+                  </replica>
+                </shard>
+              </umbrella_cluster>
+              <primary_cluster>
+                <shard>
+                  <internal_replication>true</internal_replication>
+                  <replica>
+                    <host>chi-ord-cl-0-0-0.chi-ord-cl-0-0.default.svc.cluster.local</host>
+                    <port>9000</port>
+                    <user>test</user>
+                    <password>test123</password>
+                  </replica>
+                  <replica>
+                    <host>chi-ord-cl-0-1-0.chi-ord-cl-0-1.default.svc.cluster.local</host>
+                    <port>9000</port>
+                    <user>test</user>
+                    <password>test123</password>
+                  </replica>
+                  <replica>
+                    <host>chi-ord-cl-0-2-0.chi-ord-cl-0-2.default.svc.cluster.local</host>
+                    <port>9000</port>
+                    <user>test</user>
+                    <password>test123</password>
+                  </replica>
+                </shard>
+              </primary_cluster>
+              <secondary_cluster>
+                <shard>
+                  <internal_replication>true</internal_replication>
+                  <replica>
+                    <host>chi-sfo-cl-0-0-0.chi-sfo-cl-0-0.default.svc.cluster.local</host>
+                    <port>9000</port>
+                    <user>test</user>
+                    <password>test123</password>
+                  </replica>
+                  <replica>
+                    <host>chi-sfo-cl-0-1-0.chi-sfo-cl-0-1.default.svc.cluster.local</host>
+                    <port>9000</port>
+                    <user>test</user>
+                    <password>test123</password>
+                  </replica>
+                  <replica>
+                    <host>chi-sfo-cl-0-2-0.chi-sfo-cl-0-2.default.svc.cluster.local</host>
+                    <port>9000</port>
+                    <user>test</user>
+                    <password>test123</password>
+                  </replica>
+                </shard>
+              </secondary_cluster>
+            </remote_servers>
+          </yandex>
+  templates:
+    podTemplates:
+      - name: replica
+        spec:
+          containers:
+          - name: clickhouse
+            image: altinity/clickhouse-server:23.8.8.21.altinitystable
+            volumeMounts:
+              - name: storage
+                mountPath: /var/lib/clickhouse
+    volumeClaimTemplates:
+      - name: storage
+        reclaimPolicy: Retain
+        spec:
+          accessModes:
+            - ReadWriteOnce
+          storageClassName: ebs-sc 
+          resources:
+            requests:
+              storage: 5Gi
+          
+          

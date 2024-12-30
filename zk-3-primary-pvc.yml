@@ -1,0 +1,185 @@
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: ebs-sc1
+provisioner: ebs.csi.aws.com
+volumeBindingMode: WaitForFirstConsumer
+parameters:
+  type: gp3
+  encrypted: "true"
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: zookeeper-ord-0
+  namespace: default
+spec:
+  serviceName: zookeeper-ord
+  replicas: 1
+  selector:
+    matchLabels:
+      app: zookeeper
+  template:
+    metadata:
+      labels:
+        app: zookeeper
+    spec:
+      securityContext:
+        fsGroup: 1001
+        runAsUser: 1001
+      initContainers:
+      - name: init-myid
+        image: busybox
+        command: ['sh', '-c', 'echo 1 > /data/data/myid']
+        volumeMounts:
+        - name: data
+          mountPath: /data
+      containers:
+      - name: zookeeper
+        image: bitnami/zookeeper:3.7.1
+        ports:
+          - containerPort: 2181
+          - containerPort: 2888
+          - containerPort: 3888
+        env:
+        - name: ALLOW_ANONYMOUS_LOGIN
+          value: "yes"
+        - name: ZOO_SERVER_ID
+          value: "1"
+        - name: ZOO_SERVERS
+          value: "zookeeper-ord-0-0.zookeeper-ord.default.svc.cluster.local:2888:3181;zookeeper-ord-1-0.zookeeper-ord.default.svc.cluster.local:2888:3181;zookeeper-ord-2-0.zookeeper-ord.default.svc.cluster.local:2888:3181;zookeeper-sfo-0-0.zookeeper-sfo.default.svc.cluster.local:2888:3181:observer;zookeeper-sfo-1-0.zookeeper-sfo.default.svc.cluster.local:2888:3181:observer;zookeeper-sfo-2-0.zookeeper-sfo.default.svc.cluster.local:2888:3181:observer"
+        volumeMounts:
+        - name: data
+          mountPath: /bitnami/zookeeper
+  volumeClaimTemplates:
+  - metadata:
+      name: data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      storageClassName: ebs-sc1
+      resources:
+        requests:
+          storage: 5Gi
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: zookeeper-ord-1
+  namespace: default
+spec:
+  serviceName: zookeeper-ord
+  replicas: 1
+  selector:
+    matchLabels:
+      app: zookeeper
+  template:
+    metadata:
+      labels:
+        app: zookeeper
+    spec:
+      securityContext:
+        fsGroup: 1001
+        runAsUser: 1001
+      initContainers:
+      - name: init-myid
+        image: busybox
+        command: ['sh', '-c', 'echo 2 > /data/data/myid']
+        volumeMounts:
+        - name: data
+          mountPath: /data
+      containers:
+      - name: zookeeper
+        image: bitnami/zookeeper:3.7.1
+        ports:
+          - containerPort: 2181
+          - containerPort: 2888
+          - containerPort: 3888
+        env:
+        - name: ALLOW_ANONYMOUS_LOGIN
+          value: "yes"
+        - name: ZOO_SERVER_ID
+          value: "2"
+        - name: ZOO_SERVERS
+          value: "zookeeper-ord-0-0.zookeeper-ord.default.svc.cluster.local:2888:3181;zookeeper-ord-1-0.zookeeper-ord.default.svc.cluster.local:2888:3181;zookeeper-ord-2-0.zookeeper-ord.default.svc.cluster.local:2888:3181;zookeeper-sfo-0-0.zookeeper-sfo.default.svc.cluster.local:2888:3181:observer;zookeeper-sfo-1-0.zookeeper-sfo.default.svc.cluster.local:2888:3181:observer;zookeeper-sfo-2-0.zookeeper-sfo.default.svc.cluster.local:2888:3181:observer"
+        volumeMounts:
+        - name: data
+          mountPath: /bitnami/zookeeper
+  volumeClaimTemplates:
+  - metadata:
+      name: data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      storageClassName: ebs-sc1
+      resources:
+        requests:
+          storage: 5Gi
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: zookeeper-ord-2
+  namespace: default
+spec:
+  serviceName: zookeeper-ord
+  replicas: 1
+  selector:
+    matchLabels:
+      app: zookeeper
+  template:
+    metadata:
+      labels:
+        app: zookeeper
+    spec:
+      securityContext:
+        fsGroup: 1001
+        runAsUser: 1001
+      initContainers:
+      - name: init-myid
+        image: busybox
+        command: ['sh', '-c', 'echo 3 > /data/data/myid']
+        volumeMounts:
+        - name: data
+          mountPath: /data
+      containers:
+      - name: zookeeper
+        image: bitnami/zookeeper:3.7.1
+        ports:
+          - containerPort: 2181
+          - containerPort: 2888
+          - containerPort: 3888
+        env:
+        - name: ALLOW_ANONYMOUS_LOGIN
+          value: "yes"
+        - name: ZOO_SERVER_ID
+          value: "3"
+        - name: ZOO_SERVERS
+          value: "zookeeper-ord-0-0.zookeeper-ord.default.svc.cluster.local:2888:3181;zookeeper-ord-1-0.zookeeper-ord.default.svc.cluster.local:2888:3181;zookeeper-ord-2-0.zookeeper-ord.default.svc.cluster.local:2888:3181;zookeeper-sfo-0-0.zookeeper-sfo.default.svc.cluster.local:2888:3181:observer;zookeeper-sfo-1-0.zookeeper-sfo.default.svc.cluster.local:2888:3181:observer;zookeeper-sfo-2-0.zookeeper-sfo.default.svc.cluster.local:2888:3181:observer"
+        volumeMounts:
+        - name: data
+          mountPath: /bitnami/zookeeper
+  volumeClaimTemplates:
+  - metadata:
+      name: data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      storageClassName: ebs-sc1
+      resources:
+        requests:
+          storage: 5Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: zookeeper-ord
+  namespace: default
+spec:
+  clusterIP: None
+  ports:
+    - port: 2181
+      name: client
+    - port: 2888
+      name: server
+    - port: 3888
+      name: leader-election
+  selector:
+    app: zookeeper
